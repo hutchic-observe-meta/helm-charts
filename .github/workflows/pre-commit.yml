@@ -23,3 +23,28 @@ jobs:
       - uses: pre-commit/action@v3.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  check-chart-version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # This fetches all history so we can diff properly
+
+      - name: Ensure Chart.yaml version is bumped if chart content changed
+        run: |
+          git fetch origin main:main
+          CHARTS="endpoint proxy events logs metrics stack traces" # Define your list of charts
+          for chart in $CHARTS; do
+            # Check if files within the chart directory have changed
+            if git diff --name-only main..HEAD | grep -E "^charts/$chart/"; then
+              echo "Changes detected in charts/$chart/"
+
+              # Check if the first version line in Chart.yaml for this chart has changes
+              if ! git diff main..HEAD -- charts/$chart/Chart.yaml | awk '/^+version:/ {print; exit}' | grep "^+version:"; then
+                echo "Error: Detected changes in charts/$chart/ but no changes in the first version line of Chart.yaml."
+                exit 1
+              fi
+            fi
+          done
