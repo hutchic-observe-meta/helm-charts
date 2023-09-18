@@ -11,7 +11,8 @@ Otherwise, fall back to legacy collectorScheme value.
     {{- else -}}
         {{- .collectorScheme | default "https" -}}
     {{- end -}}
-{{- end -}}{{- end -}}
+{{- end -}}
+{{- end -}}
 
 {{- /*
 If a collection endpoint is provided, parse the host from that and split the host from the port.
