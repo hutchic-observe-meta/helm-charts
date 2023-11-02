@@ -36,18 +36,24 @@ jobs:
         uses: updatecli/updatecli-action@v2
 
       - name: Bump any charts that require it
+        id: bump-changes
         run: |
           make updatecli/internal
-          git diff > bump.log
+          git diff > diff.txt
+          echo "diff=$(<diff.txt)" >> $GITHUB_ENV
         env:
           UPDATECLI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment PR with needed changes
-        if: ${{ steps.bump-changes.outputs.diff != '' }}
+        if: env.diff != ''
         uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          filePath: bump.log
+          message: |
+            Changes detected in charts:
+            ```
+            ${{ env.diff }}
+            ```
           comment_tag: chart-bump-changes
           reactions: eyes
 
