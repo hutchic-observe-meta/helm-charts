@@ -24,7 +24,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  check-chart-version-bump:
+  chart-version-bumps:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,6 +32,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if Chart.yaml versions are bumped if relevant
+      - name: Setup updatecli
+        uses: updatecli/updatecli-action@v2
+
+      - name: Bump any charts that require it
+        id: bump-changes
         run: |
-          make validate-chart-version
+          make updatecli/internal
+          git diff > diff.txt
+          echo "diff=$(<diff.txt)" >> $GITHUB_ENV
+        env:
+          UPDATECLI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment PR with needed changes
+        if: env.diff != ''
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            Changes detected in charts:
+            ```
+            ${{ env.diff }}
+            ```
+          comment_tag: chart-bump-changes
+          reactions: eyes
+
+      - name: Fail if chart versions needed to be bumped
+        run: |
+          if [ -s bump.log ]; then
+            echo "Chart version bumps are needed. Please check the PR comments."
+            exit 1
+          fi
