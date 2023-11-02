@@ -32,6 +32,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup updatecli
+        uses: updatecli/updatecli-action@v2
+
       - name: Bump any charts that require it
         run: |
           make updatecli/internal
