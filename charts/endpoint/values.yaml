@@ -3,7 +3,7 @@ global:
     collectionEndpoint: ""
 
     # Legacy configuration values, only used if collectionEndpoint is not set
-    customer: ""
+    customer: "xxx"
     collectorScheme: "https"
     collectorHost: "collect.observeinc.com"
     collectorPort: "443"
