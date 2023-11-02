@@ -36,30 +36,25 @@ jobs:
         uses: updatecli/updatecli-action@v2
 
       - name: Bump any charts that require it
-        id: bump-changes
         run: |
           make updatecli/internal
           git diff > diff.txt
-          echo "diff=$(<diff.txt)" >> $GITHUB_ENV
+          if [ -s diff.txt ]; then
+            echo "Chart version bumps are needed. Please check the PR comments."
+            exit 1
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment PR with needed changes
-        if: env.diff != ''
+        if: failure()
         uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: |
             Changes detected in charts:
             ```
-            ${{ env.diff }}
+            $(git diff)
             ```
           comment_tag: chart-bump-changes
           reactions: eyes
-
-      - name: Fail if chart versions needed to be bumped
-        run: |
-          if [ -s bump.log ]; then
-            echo "Chart version bumps are needed. Please check the PR comments."
-            exit 1
-          fi
