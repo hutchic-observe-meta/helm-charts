@@ -39,6 +39,8 @@ jobs:
         run: |
           make updatecli/internal
           git diff > bump.log
+        env:
+          UPDATECLI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment PR with needed changes
         if: ${{ steps.bump-changes.outputs.diff != '' }}
